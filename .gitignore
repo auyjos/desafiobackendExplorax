@@ -1,0 +1,21 @@
+# Binaries for programs and plugins
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+
+# Build output directories
+/bin/
+/build/
+
+# Test binaries (built with "go test -c")
+*.test
+
+# Go coverage tool outputs (e.g., from LiteIDE)
+*.out
+
+# OS-specific files
+.DS_Store
+
+.env
