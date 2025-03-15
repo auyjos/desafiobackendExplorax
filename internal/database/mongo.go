@@ -9,6 +9,7 @@ import (
 	"explorax-backend/internal/models"
 
 	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
@@ -110,7 +111,7 @@ func InsertMissionProgress(progress models.MissionProgress) error {
 }
 
 // UpdateMissionProgress actualiza el progreso de una misión a "completada" y registra la fecha final.
-func UpdateMissionProgress(userID, missionID string) error {
+func UpdateMissionProgress(userID, missionID primitive.ObjectID) error {
 	collection := GetMissionProgressCollection()
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
@@ -132,7 +133,7 @@ func UpdateMissionProgress(userID, missionID string) error {
 }
 
 // GetMissionProgress obtiene todos los documentos de progreso de misión para un usuario.
-func GetMissionProgress(userID string) ([]models.MissionProgress, error) {
+func GetMissionProgress(userID primitive.ObjectID) ([]models.MissionProgress, error) {
 	collection := GetMissionProgressCollection()
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
@@ -148,7 +149,7 @@ func GetMissionProgress(userID string) ([]models.MissionProgress, error) {
 }
 
 // GetActiveMissions retorna las misiones con estado "iniciada" para un usuario.
-func GetActiveMissions(userID string) ([]models.MissionProgress, error) {
+func GetActiveMissions(userID primitive.ObjectID) ([]models.MissionProgress, error) {
 	collection := GetMissionProgressCollection()
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
@@ -164,7 +165,7 @@ func GetActiveMissions(userID string) ([]models.MissionProgress, error) {
 }
 
 // GetCompletedMissions retorna las misiones con estado "completada" para un usuario.
-func GetCompletedMissions(userID string) ([]models.MissionProgress, error) {
+func GetCompletedMissions(userID primitive.ObjectID) ([]models.MissionProgress, error) {
 	collection := GetMissionProgressCollection()
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
@@ -179,20 +180,46 @@ func GetCompletedMissions(userID string) ([]models.MissionProgress, error) {
 	return completed, nil
 }
 
-// GetLeaderboard retorna un ranking de usuarios basado en el número de misiones completadas.
+// GetLeaderboard retorna un ranking de todos los usuarios basado en misiones completadas.
+// Incluye a los usuarios con 0 completadas.
 func GetLeaderboard() ([]bson.M, error) {
-	collection := GetMissionProgressCollection()
+	userCollection := Client.Database("explorax").Collection("users")
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
+
 	pipeline := mongo.Pipeline{
-		bson.D{{Key: "$match", Value: bson.M{"status": "completada"}}},
-		bson.D{{Key: "$group", Value: bson.M{
-			"_id":            "$userId",
-			"completedCount": bson.M{"$sum": 1},
+		// 1) Realiza un lookup para unir con "mission_progress"
+		bson.D{{Key: "$lookup", Value: bson.M{
+			"from":         "mission_progress",
+			"localField":   "_id",    // _id de users
+			"foreignField": "userId", // userId en mission_progress
+			"as":           "progress",
 		}}},
+		// 2) Desenrolla el array "progress" para contar cada registro individualmente
+		bson.D{{Key: "$unwind", Value: bson.M{
+			"path":                       "$progress",
+			"preserveNullAndEmptyArrays": true,
+		}}},
+		// 3) Agrupa por usuario y suma 1 para cada misión completada
+		bson.D{{Key: "$group", Value: bson.M{
+			"_id":      "$_id",
+			"username": bson.M{"$first": "$username"},
+			"email":    bson.M{"$first": "$email"},
+			"completedCount": bson.M{
+				"$sum": bson.M{
+					"$cond": []interface{}{
+						bson.M{"$eq": []interface{}{"$progress.status", "completada"}},
+						1,
+						0,
+					},
+				},
+			},
+		}}},
+		// 4) Ordena de mayor a menor por completedCount
 		bson.D{{Key: "$sort", Value: bson.M{"completedCount": -1}}},
 	}
-	cursor, err := collection.Aggregate(ctx, pipeline)
+
+	cursor, err := userCollection.Aggregate(ctx, pipeline)
 	if err != nil {
 		return nil, err
 	}
@@ -204,20 +231,27 @@ func GetLeaderboard() ([]bson.M, error) {
 }
 
 // GetUserStatistics retorna estadísticas para un usuario, como total de misiones completadas y duración promedio.
-func GetUserStatistics(userID string) (bson.M, error) {
-	collection := GetMissionProgressCollection()
+func GetUserStatistics(userID primitive.ObjectID) (bson.M, error) {
+	// Contexto para las consultas.
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
-	// Total de misiones completadas
-	total, err := collection.CountDocuments(ctx, bson.M{"userId": userID, "status": "completada"})
+	// 1. Total de misiones completadas por el usuario.
+	progressCollection := GetMissionProgressCollection()
+	totalCompleted, err := progressCollection.CountDocuments(ctx, bson.M{
+		"userId": userID,
+		"status": "completada",
+	})
 	if err != nil {
 		return nil, err
 	}
 
-	// Cálculo de duración promedio de misiones completadas
+	// 2. Calcular duración promedio de misiones completadas.
 	pipeline := mongo.Pipeline{
-		bson.D{{Key: "$match", Value: bson.M{"userId": userID, "status": "completada"}}},
+		bson.D{{Key: "$match", Value: bson.M{
+			"userId": userID,
+			"status": "completada",
+		}}},
 		bson.D{{Key: "$project", Value: bson.M{
 			"duration": bson.M{
 				"$subtract": []interface{}{"$endDate", "$startDate"},
@@ -228,7 +262,7 @@ func GetUserStatistics(userID string) (bson.M, error) {
 			"averageDuration": bson.M{"$avg": "$duration"},
 		}}},
 	}
-	cursor, err := collection.Aggregate(ctx, pipeline)
+	cursor, err := progressCollection.Aggregate(ctx, pipeline)
 	if err != nil {
 		return nil, err
 	}
@@ -236,15 +270,146 @@ func GetUserStatistics(userID string) (bson.M, error) {
 	if err = cursor.All(ctx, &results); err != nil {
 		return nil, err
 	}
-	var avgDuration interface{}
+	var avgDuration any
 	if len(results) > 0 {
 		avgDuration = results[0]["averageDuration"]
 	} else {
 		avgDuration = 0
 	}
 
+	// 3. Total de misiones disponibles en el sistema.
+	missionsCollection := Client.Database("explorax").Collection("missions")
+	totalMissions, err := missionsCollection.CountDocuments(ctx, bson.M{})
+	if err != nil {
+		return nil, err
+	}
+
+	// 4. Calcular porcentaje de avance.
+	progressPercentage := 0.0
+	if totalMissions > 0 {
+		progressPercentage = (float64(totalCompleted) / float64(totalMissions)) * 100
+	}
+
+	// Retorna estadísticas del usuario.
 	return bson.M{
-		"totalCompleted":  total,
-		"averageDuration": avgDuration,
+		"totalCompleted":     totalCompleted,
+		"averageDuration":    avgDuration,
+		"progressPercentage": progressPercentage,
 	}, nil
+}
+
+func GetMissionByID(id primitive.ObjectID) (*models.Mission, error) {
+	collection := Client.Database("explorax").Collection("missions")
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	var mission models.Mission
+	err := collection.FindOne(ctx, bson.M{"_id": id}).Decode(&mission)
+	if err != nil {
+		return nil, err
+	}
+	return &mission, nil
+}
+
+// GetMissionsOverview calcula estadísticas globales:
+// - Misión más popular (mayor número de completadas).
+// - Tiempo promedio de finalización por misión.
+func GetMissionsOverview() (bson.M, error) {
+	collection := GetMissionProgressCollection()
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	// Pipeline para la misión más popular:
+	pipelineMostPopular := mongo.Pipeline{
+		// Filtra solo las misiones completadas.
+		bson.D{{Key: "$match", Value: bson.M{"status": "completada"}}},
+		// Agrupa por missionId y cuenta cuántas veces se completó.
+		bson.D{{Key: "$group", Value: bson.M{
+			"_id":   "$missionId",
+			"count": bson.M{"$sum": 1},
+		}}},
+		// Ordena de mayor a menor.
+		bson.D{{Key: "$sort", Value: bson.M{"count": -1}}},
+		// Toma solo la misión con más completadas.
+		bson.D{{Key: "$limit", Value: 1}},
+		// Lookup para traer la misión de la colección "missions".
+		bson.D{{Key: "$lookup", Value: bson.M{
+			"from":         "missions",
+			"localField":   "_id", // ya es ObjectID
+			"foreignField": "_id",
+			"as":           "mission",
+		}}},
+		// Desenrolla el array "mission".
+		bson.D{{Key: "$unwind", Value: "$mission"}},
+		// Proyecta el resultado final.
+		bson.D{{Key: "$project", Value: bson.M{
+			"_id":       0,
+			"missionId": "$_id",
+			"count":     1,
+			"mission":   1,
+		}}},
+	}
+
+	cursor, err := collection.Aggregate(ctx, pipelineMostPopular)
+	if err != nil {
+		return nil, err
+	}
+	var popularResult []bson.M
+	if err = cursor.All(ctx, &popularResult); err != nil {
+		return nil, err
+	}
+
+	var mostPopular interface{}
+	if len(popularResult) > 0 {
+		mostPopular = popularResult[0]
+	} else {
+		mostPopular = nil
+	}
+
+	// Pipeline para calcular el promedio de duración por misión:
+	pipelineAvgTime := mongo.Pipeline{
+		// Filtra solo las misiones completadas.
+		bson.D{{Key: "$match", Value: bson.M{"status": "completada"}}},
+		// Agrupa por missionId y calcula el promedio de (endDate - startDate).
+		bson.D{{Key: "$group", Value: bson.M{
+			"_id": "$missionId",
+			"averageDuration": bson.M{
+				"$avg": bson.M{"$subtract": []interface{}{"$endDate", "$startDate"}},
+			},
+			"count": bson.M{"$sum": 1},
+		}}},
+		// Lookup para traer la información de la misión.
+		bson.D{{Key: "$lookup", Value: bson.M{
+			"from":         "missions",
+			"localField":   "_id",
+			"foreignField": "_id",
+			"as":           "mission",
+		}}},
+		bson.D{{Key: "$unwind", Value: "$mission"}},
+
+		bson.D{{Key: "$project", Value: bson.M{
+			"_id":             0,
+			"missionId":       "$_id",
+			"averageDuration": 1,
+			"count":           1,
+			"mission":         1,
+		}}},
+	}
+
+	cursor2, err := collection.Aggregate(ctx, pipelineAvgTime)
+	if err != nil {
+		return nil, err
+	}
+	var avgResults []bson.M
+	if err = cursor2.All(ctx, &avgResults); err != nil {
+		return nil, err
+	}
+
+	// Estructura final del overview
+	overview := bson.M{
+		"mostPopularMission": mostPopular,
+		"avgCompletionTimes": avgResults,
+	}
+
+	return overview, nil
 }

@@ -72,7 +72,7 @@ func Login(c *gin.Context) {
 	}
 
 	// Generar token JWT (la función GenerateJWT se define en utils)
-	token, err := utils.GenerateJWT(user.ID)
+	token, err := utils.GenerateJWT(user.ID.Hex())
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Error al generar token"})
 		return

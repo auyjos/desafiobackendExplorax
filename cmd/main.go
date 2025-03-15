@@ -31,17 +31,35 @@ func main() {
 		auth.POST("/login", handlers.Login)
 	}
 
+	admin := router.Group("/admin")
+	admin.Use(middleware.JWTAuthMiddleware())
+	{
+		admin.POST("/missions/create", handlers.CreateMission)
+	}
 	// Grupo de endpoints de misiones
 	missions := router.Group("/missions")
 	missions.Use(middleware.JWTAuthMiddleware())
 	{
+
+		missions.GET("/all", handlers.GetAllMissions)
 		missions.POST("/start", handlers.StartMission)
 		missions.POST("/complete", handlers.CompleteMission)
 		missions.GET("/progress", handlers.GetProgress)
 		missions.GET("/active", handlers.GetActiveMissions)
 		missions.GET("/completed", handlers.GetCompletedMissions)
-		missions.GET("/leaderboard", handlers.GetLeaderboard)
 		missions.GET("/statistics", handlers.GetStatistics)
+	}
+
+	publicMissions := router.Group("/missions")
+	{
+		publicMissions.GET("/leaderboard", handlers.GetLeaderboard)
+		publicMissions.GET("/overview", handlers.GetMissionsOverview)
+	}
+
+	mission := router.Group("/mission")
+	mission.Use(middleware.JWTAuthMiddleware())
+	{
+		mission.GET("/:id", handlers.GetMissionByID)
 	}
 
 	// Define el puerto (por defecto 8080)
