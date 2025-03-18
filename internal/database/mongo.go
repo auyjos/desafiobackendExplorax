@@ -4,6 +4,7 @@ package database
 import (
 	"context"
 	"log"
+	"os"
 	"time"
 
 	"explorax-backend/internal/models"
@@ -19,7 +20,7 @@ var Client *mongo.Client
 // Connect establece la conexión a MongoDB usando ServerAPIOptions.
 func Connect() {
 
-	mongoURI := "mongodb+srv://jose:1234@etm.nwysozv.mongodb.net/?retryWrites=true&w=majority&appName=ETM"
+	mongoURI := os.Getenv("MONGO_URI")
 	if mongoURI == "" {
 		log.Fatal("MONGO_URI no está configurada. Revisa tu .env o variables de entorno.")
 	}
