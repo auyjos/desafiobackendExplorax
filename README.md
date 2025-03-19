@@ -83,8 +83,8 @@ README.md               # Este archivo
 
 1. **Clonar el Repositorio:**
    ```bash
-git clone git@github.com:auyjos/desafiobackendExplorax.git
-cd desafiobackendExplorax
+    git clone git@github.com:auyjos/desafiobackendExplorax.git
+    cd desafiobackendExplorax
    ```
 
 2. **Instalar Dependencias:**
