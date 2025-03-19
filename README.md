@@ -1,7 +1,4 @@
 
-
-```markdown
-
 ---
 
 ## Tabla de Contenidos
@@ -272,4 +269,3 @@ Esto garantiza que el contenedor se reinicie si la instancia se reinicia o si el
 - **Swagger (Opcional):** Si has integrado Swagger, genera la documentación y prueba los endpoints.
 
 ---
-```
