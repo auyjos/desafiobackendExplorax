@@ -1,0 +1,459 @@
+basePath: /
+definitions:
+  handlers.GenericResponse:
+    properties:
+      error:
+        description: Si hay error, lo incluye
+        type: string
+      message:
+        type: string
+    type: object
+  handlers.LeaderboardEntry:
+    properties:
+      completed_count:
+        type: integer
+      email:
+        type: string
+      username:
+        type: string
+    type: object
+  handlers.LoginRequest:
+    description: Estructura para iniciar sesión
+    properties:
+      email:
+        example: usuario@email.com
+        type: string
+      password:
+        example: "123456"
+        type: string
+    required:
+    - email
+    - password
+    type: object
+  handlers.RegisterRequest:
+    description: Estructura para registrar un usuario
+    properties:
+      email:
+        example: usuario@email.com
+        type: string
+      password:
+        example: "123456"
+        type: string
+      username:
+        example: usuario123
+        type: string
+    required:
+    - email
+    - password
+    - username
+    type: object
+  handlers.UserStatistics:
+    properties:
+      average_duration:
+        type: number
+      progress_percentage:
+        type: number
+      total_completed:
+        type: integer
+    type: object
+  models.Mission:
+    properties:
+      createdAt:
+        type: string
+      description:
+        type: string
+      id:
+        type: string
+      title:
+        type: string
+    type: object
+  models.MissionProgress:
+    properties:
+      endDate:
+        type: string
+      id:
+        type: string
+      missionId:
+        type: string
+      startDate:
+        type: string
+      status:
+        description: '"iniciada" o "completada"'
+        type: string
+      userId:
+        type: string
+    type: object
+host: localhost:8080
+info:
+  contact: {}
+  description: Documentación de la API para Explorax Backend
+  title: Explorax Backend API
+  version: "1.0"
+paths:
+  /auth/login:
+    post:
+      consumes:
+      - application/json
+      description: Autentica a un usuario y devuelve un token JWT.
+      parameters:
+      - description: Credenciales de usuario (email y password)
+        in: body
+        name: credentials
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.LoginRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Token JWT generado exitosamente
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Datos inválidos
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: Credenciales incorrectas
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Error interno
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Inicia sesión de usuario
+      tags:
+      - Auth
+  /auth/register:
+    post:
+      consumes:
+      - application/json
+      description: Permite registrar un nuevo usuario en la plataforma.
+      parameters:
+      - description: Datos del usuario
+        in: body
+        name: user
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.RegisterRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Usuario creado exitosamente
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Datos inválidos
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Error interno del servidor
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Registro de usuario
+      tags:
+      - Auth
+  /mission/{id}:
+    get:
+      consumes:
+      - application/json
+      description: Retorna los detalles de una misión específica por su ID
+      parameters:
+      - description: ID de la misión
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.Mission'
+        "400":
+          description: ID de misión inválido
+          schema:
+            $ref: '#/definitions/handlers.GenericResponse'
+        "404":
+          description: Misión no encontrada
+          schema:
+            $ref: '#/definitions/handlers.GenericResponse'
+      security:
+      - BearerAuth: []
+      summary: Obtiene una misión por su ID
+      tags:
+      - Missions
+  /missions:
+    get:
+      consumes:
+      - application/json
+      description: Retorna una lista de todas las misiones disponibles en la base
+        de datos
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/models.Mission'
+            type: array
+        "500":
+          description: No se pudieron obtener las misiones
+          schema:
+            $ref: '#/definitions/handlers.GenericResponse'
+      summary: Obtiene todas las misiones
+      tags:
+      - Missions
+    post:
+      consumes:
+      - application/json
+      description: Crea una nueva misión con un título y descripción proporcionados
+      parameters:
+      - description: Detalles de la misión
+        in: body
+        name: mission
+        required: true
+        schema:
+          $ref: '#/definitions/models.Mission'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Misión creada exitosamente
+          schema:
+            $ref: '#/definitions/handlers.GenericResponse'
+        "400":
+          description: Datos inválidos
+          schema:
+            $ref: '#/definitions/handlers.GenericResponse'
+        "500":
+          description: No se pudo crear la misión
+          schema:
+            $ref: '#/definitions/handlers.GenericResponse'
+      security:
+      - BearerAuth: []
+      summary: Crea una nueva misión
+      tags:
+      - Missions
+  /missions/active:
+    get:
+      consumes:
+      - application/json
+      description: Retorna todas las misiones con estado "iniciada" para un usuario
+        autenticado
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/models.MissionProgress'
+            type: array
+        "401":
+          description: Usuario no autenticado
+          schema:
+            $ref: '#/definitions/handlers.GenericResponse'
+        "500":
+          description: Error interno del servidor
+          schema:
+            $ref: '#/definitions/handlers.GenericResponse'
+      security:
+      - BearerAuth: []
+      summary: Obtiene misiones activas de un usuario
+      tags:
+      - Missions
+  /missions/complete:
+    post:
+      consumes:
+      - application/json
+      description: Actualiza el estado de la misión a "completada".
+      parameters:
+      - description: Mission ID
+        in: body
+        name: mission
+        required: true
+        schema:
+          type: object
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Completa una misión
+      tags:
+      - Missions
+  /missions/completed:
+    get:
+      consumes:
+      - application/json
+      description: Retorna todas las misiones con estado "completada" para un usuario
+        autenticado
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/models.MissionProgress'
+            type: array
+        "401":
+          description: Usuario no autenticado
+          schema:
+            $ref: '#/definitions/handlers.GenericResponse'
+        "500":
+          description: Error interno del servidor
+          schema:
+            $ref: '#/definitions/handlers.GenericResponse'
+      security:
+      - BearerAuth: []
+      summary: Obtiene misiones completadas de un usuario
+      tags:
+      - Missions
+  /missions/leaderboard:
+    get:
+      consumes:
+      - application/json
+      description: Devuelve un leaderboard con los usuarios ordenados por número de
+        misiones completadas
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/handlers.LeaderboardEntry'
+            type: array
+        "500":
+          description: Error interno del servidor
+          schema:
+            $ref: '#/definitions/handlers.GenericResponse'
+      summary: Obtiene el ranking de usuarios basado en misiones completadas
+      tags:
+      - Missions
+  /missions/overview:
+    get:
+      description: Devuelve estadísticas sobre las misiones, incluyendo la misión
+        más popular y el tiempo promedio de finalización.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Resumen de misiones
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Error interno al obtener el resumen
+          schema:
+            additionalProperties: true
+            type: object
+      summary: Obtiene el resumen de las misiones
+      tags:
+      - Missions
+  /missions/progress:
+    get:
+      consumes:
+      - application/json
+      description: Devuelve todas las misiones iniciadas y completadas del usuario.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/models.MissionProgress'
+            type: array
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Obtiene el progreso de misiones
+      tags:
+      - Missions
+  /missions/statistics:
+    get:
+      consumes:
+      - application/json
+      description: Devuelve estadísticas como el número total de misiones completadas
+        y duración promedio
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/handlers.UserStatistics'
+        "401":
+          description: Usuario no autenticado
+          schema:
+            $ref: '#/definitions/handlers.GenericResponse'
+        "500":
+          description: Error interno del servidor
+          schema:
+            $ref: '#/definitions/handlers.GenericResponse'
+      security:
+      - BearerAuth: []
+      summary: Obtiene estadísticas del usuario
+      tags:
+      - Missions
+securityDefinitions:
+  BearerAuth:
+    in: header
+    name: Authorization
+    type: apiKey
+swagger: "2.0"

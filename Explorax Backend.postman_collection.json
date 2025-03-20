@@ -1,0 +1,454 @@
+{
+	"info": {
+		"_postman_id": "a0b801f3-5e5e-4912-8988-c3da131f1eff",
+		"name": "Explorax Backend",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "25799555",
+		"_collection_link": "https://planetary-spaceship-947243.postman.co/workspace/New-Team-Workspace~fbaddaad-dd2d-4679-b3a8-506ed20d8c8e/collection/25799555-a0b801f3-5e5e-4912-8988-c3da131f1eff?action=share&source=collection_link&creator=25799555"
+	},
+	"item": [
+		{
+			"name": "Register user",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n  \"username\": \"joseauyon\",\r\n  \"email\": \"auyon@gmail.com\",\r\n  \"password\": \"123\"\r\n}\r\n",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:8080/auth/register",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"auth",
+						"register"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "login",
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NDIwMDcwNDgsInVzZXJfaWQiOiI2N2QwZjY0YjljNzc3MDNlY2JhOWI2NDIifQ.cwHuYyIowyU3Nngo-s4E0ay6HYz6XDZY_F392iTefBA",
+							"type": "string"
+						}
+					]
+				},
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n  \"email\": \"uvg@gmail.com\",\r\n  \"password\": \"123\"\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:8080/auth/login",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"auth",
+						"login"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Create Mission",
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NDI2NjcwMTgsInVzZXJfaWQiOiI2N2RiMDg3YjlhMzA3MTY5NzQ4ZWJkNjQifQ._4jSSbEVlebQEYMYIGC065UbgPs5wcwZtCZXX8_dCPQ",
+							"type": "string"
+						}
+					]
+				},
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n  \"title\": \"Misión Espacial 4\",\r\n  \"description\": \"Explorar Pluto\"\r\n}\r\n",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:8080/admin/missions/create",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"admin",
+						"missions",
+						"create"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Get all misssions",
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NDI2NjcwMTgsInVzZXJfaWQiOiI2N2RiMDg3YjlhMzA3MTY5NzQ4ZWJkNjQifQ._4jSSbEVlebQEYMYIGC065UbgPs5wcwZtCZXX8_dCPQ",
+							"type": "string"
+						}
+					]
+				},
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:8080/missions/all",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"missions",
+						"all"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Get mission by Id",
+			"protocolProfileBehavior": {
+				"disableBodyPruning": true
+			},
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NDIyNjczMzcsInVzZXJfaWQiOiI2N2Q0ZWRkMWY2ODgyYmYyNzBlNzdlYzQifQ.PSdbB5JGKYrmMbK_XFUixkaHibv0OXXSgiWyemrXd7c",
+							"type": "string"
+						}
+					]
+				},
+				"method": "GET",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:8080/mission/67d506965f7ed66cf08c0bba",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"mission",
+						"67d506965f7ed66cf08c0bba"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Start mission",
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NDIyNzU3NjYsInVzZXJfaWQiOiI2N2Q1MTAyYTYxNWM5ZDE3MGQ1YmI3ZGUifQ.U_XOSrtBnLurLNfucmnMJh9fp56AgYgjr5-_7zrSbjE",
+							"type": "string"
+						}
+					]
+				},
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n  \"mission_id\": \"67d506965f7ed66cf08c0bba\"\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:8080/missions/start",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"missions",
+						"start"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Complete Mission",
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NDIyNzU3NjYsInVzZXJfaWQiOiI2N2Q1MTAyYTYxNWM5ZDE3MGQ1YmI3ZGUifQ.U_XOSrtBnLurLNfucmnMJh9fp56AgYgjr5-_7zrSbjE",
+							"type": "string"
+						}
+					]
+				},
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n  \"mission_id\":\"67d506965f7ed66cf08c0bba\"\r\n}\r\n",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:8080/missions/complete",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"missions",
+						"complete"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Get mission progress",
+			"protocolProfileBehavior": {
+				"disableBodyPruning": true
+			},
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NDIyNzQ5ODEsInVzZXJfaWQiOiI2N2Q1MGQxYzNjYTM4YmEwN2FkOTMwMWUifQ.QXPcwcM3sZ7Zqe0CnpOTNQoVp1M5SDNp6_BXmIqBX7s",
+							"type": "string"
+						}
+					]
+				},
+				"method": "GET",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:8080/missions/progress",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"missions",
+						"progress"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Get active missions",
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NDIyNzQ5ODEsInVzZXJfaWQiOiI2N2Q1MGQxYzNjYTM4YmEwN2FkOTMwMWUifQ.QXPcwcM3sZ7Zqe0CnpOTNQoVp1M5SDNp6_BXmIqBX7s",
+							"type": "string"
+						}
+					]
+				},
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:8080/missions/active",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"missions",
+						"active"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Get completed missions",
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NDIyNzU3NjYsInVzZXJfaWQiOiI2N2Q1MTAyYTYxNWM5ZDE3MGQ1YmI3ZGUifQ.U_XOSrtBnLurLNfucmnMJh9fp56AgYgjr5-_7zrSbjE",
+							"type": "string"
+						}
+					]
+				},
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:8080/missions/completed",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"missions",
+						"completed"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Get leaderboard",
+			"request": {
+				"auth": {
+					"type": "noauth"
+				},
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:8080/missions/leaderboard",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"missions",
+						"leaderboard"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Get statistics",
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NDIyNzU3NjYsInVzZXJfaWQiOiI2N2Q1MTAyYTYxNWM5ZDE3MGQ1YmI3ZGUifQ.U_XOSrtBnLurLNfucmnMJh9fp56AgYgjr5-_7zrSbjE",
+							"type": "string"
+						}
+					]
+				},
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:8080/missions/statistics",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"missions",
+						"statistics"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Get missions overview",
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NDIyNjc3NTAsInVzZXJfaWQiOiI2N2Q0ZWRkMWY2ODgyYmYyNzBlNzdlYzQifQ.VhaL7GY-xCVpnqpUS_gB0VEv41R5PB-oOZeuUOxc-1I",
+							"type": "string"
+						}
+					]
+				},
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:8080/missions/overview",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"missions",
+						"overview"
+					]
+				}
+			},
+			"response": []
+		}
+	]
+}

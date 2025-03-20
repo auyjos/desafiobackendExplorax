@@ -4,25 +4,39 @@ import (
 	"log"
 	"os"
 
+	_ "explorax-backend/docs"
 	"explorax-backend/internal/database"
 	"explorax-backend/internal/handlers"
 	"explorax-backend/internal/middleware"
 
 	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
+	swaggerFiles "github.com/swaggo/files"
+	ginSwagger "github.com/swaggo/gin-swagger"
 )
 
+// @title Explorax Backend API
+// @version 1.0
+// @description Documentación de la API para Explorax Backend
+// @host localhost:8080
+// @BasePath /
+// @securityDefinitions.apikey BearerAuth
+// @in header
+// @name Authorization
 func main() {
-	// Carga las variables de entorno desde .env
+	// Cargar variables de entorno
 	if err := godotenv.Load(); err != nil {
 		log.Println("No se encontró el archivo .env o hubo un error al cargarlo")
 	}
 
-	// Conecta a MongoDB
+	// Conectar a MongoDB
 	database.Connect()
 
-	// Crea el router
+	// Configurar Gin Router
 	router := gin.Default()
+
+	// Agregar Swagger UI
+	router.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 
 	// Grupo de endpoints de autenticación
 	auth := router.Group("/auth")
@@ -31,16 +45,16 @@ func main() {
 		auth.POST("/login", handlers.Login)
 	}
 
+	// Endpoints protegidos con JWT
 	admin := router.Group("/admin")
 	admin.Use(middleware.JWTAuthMiddleware())
 	{
 		admin.POST("/missions/create", handlers.CreateMission)
 	}
-	// Grupo de endpoints de misiones
+
 	missions := router.Group("/missions")
 	missions.Use(middleware.JWTAuthMiddleware())
 	{
-
 		missions.GET("/all", handlers.GetAllMissions)
 		missions.POST("/start", handlers.StartMission)
 		missions.POST("/complete", handlers.CompleteMission)
@@ -50,6 +64,7 @@ func main() {
 		missions.GET("/statistics", handlers.GetStatistics)
 	}
 
+	// Endpoints públicos
 	publicMissions := router.Group("/missions")
 	{
 		publicMissions.GET("/leaderboard", handlers.GetLeaderboard)
@@ -62,12 +77,11 @@ func main() {
 		mission.GET("/:id", handlers.GetMissionByID)
 	}
 
-	// Define el puerto (por defecto 8080)
+	// Iniciar servidor
 	port := os.Getenv("PORT")
 	if port == "" {
 		port = "8080"
 	}
 
-	// Inicia el servidor
 	router.Run(":" + port)
 }

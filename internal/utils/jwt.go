@@ -1,4 +1,4 @@
-// /internal/utils/jwt.go
+// Package utils proporciona utilidades como la generación de JWT.
 package utils
 
 import (
@@ -8,7 +8,6 @@ import (
 	"github.com/golang-jwt/jwt"
 )
 
-// GenerateJWT genera un token JWT para un user_id dado.
 func GenerateJWT(userID string) (string, error) {
 	token := jwt.New(jwt.SigningMethodHS256)
 	claims := token.Claims.(jwt.MapClaims)

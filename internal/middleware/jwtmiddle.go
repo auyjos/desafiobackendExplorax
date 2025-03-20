@@ -1,7 +1,7 @@
-// /internal/middleware/jwt.go
 package middleware
 
 import (
+	"fmt"
 	"net/http"
 	"os"
 	"strings"
@@ -18,24 +18,43 @@ func JWTAuthMiddleware() gin.HandlerFunc {
 			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "No se proporcionó token"})
 			return
 		}
+
 		parts := strings.Split(authHeader, " ")
 		if len(parts) != 2 || parts[0] != "Bearer" {
 			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "Formato de token inválido"})
 			return
 		}
+
 		tokenString := parts[1]
 		secret := os.Getenv("JWT_SECRET")
+
 		token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
 			return []byte(secret), nil
 		})
+
 		if err != nil || !token.Valid {
 			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "Token inválido"})
 			return
 		}
-		// Si se desea, se puede extraer el user_id y guardarlo en el contexto
+
+		// Extraer el user_id del token y almacenarlo en el contexto de la petición
 		if claims, ok := token.Claims.(jwt.MapClaims); ok {
-			c.Set("user_id", claims["user_id"])
+			userID, exists := claims["user_id"]
+			if !exists {
+				c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "Token no contiene user_id"})
+				return
+			}
+
+			userIDStr, ok := userID.(string)
+			if !ok {
+				c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "Formato incorrecto en user_id"})
+				return
+			}
+
+			fmt.Println("✅ Token válido para usuario:", userIDStr)
+			c.Set("user_id", userIDStr)
 		}
+
 		c.Next()
 	}
 }

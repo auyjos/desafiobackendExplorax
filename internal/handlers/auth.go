@@ -12,13 +12,34 @@ import (
 	"explorax-backend/internal/utils"
 )
 
-// Register maneja el registro de nuevos usuarios
+// RegisterRequest representa los datos esperados en el registro de usuario.
+// @Description Estructura para registrar un usuario
+type RegisterRequest struct {
+	Username string `json:"username" binding:"required" example:"usuario123"`
+	Email    string `json:"email" binding:"required,email" example:"usuario@email.com"`
+	Password string `json:"password" binding:"required" example:"123456"`
+}
+
+// LoginRequest representa los datos esperados en el login de usuario.
+// @Description Estructura para iniciar sesión
+type LoginRequest struct {
+	Email    string `json:"email" binding:"required,email" example:"usuario@email.com"`
+	Password string `json:"password" binding:"required" example:"123456"`
+}
+
+// Register godoc
+// @Summary Registro de usuario
+// @Description Permite registrar un nuevo usuario en la plataforma.
+// @Tags Auth
+// @Accept json
+// @Produce json
+// @Param user body RegisterRequest true "Datos del usuario"
+// @Success 201 {object} map[string]string "Usuario creado exitosamente"
+// @Failure 400 {object} map[string]string "Datos inválidos"
+// @Failure 500 {object} map[string]string "Error interno del servidor"
+// @Router /auth/register [post]
 func Register(c *gin.Context) {
-	var input struct {
-		Username string `json:"username" binding:"required"`
-		Email    string `json:"email" binding:"required,email"`
-		Password string `json:"password" binding:"required"`
-	}
+	var input RegisterRequest
 	if err := c.ShouldBindJSON(&input); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Datos inválidos: " + err.Error()})
 		return
@@ -38,7 +59,7 @@ func Register(c *gin.Context) {
 		CreatedAt:    time.Now(),
 	}
 
-	// Insertar el usuario en MongoDB (usa funciones definidas en el paquete database)
+	// Insertar el usuario en MongoDB
 	if err := database.InsertUser(user); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Error al registrar el usuario"})
 		return
@@ -47,12 +68,20 @@ func Register(c *gin.Context) {
 	c.JSON(http.StatusCreated, gin.H{"message": "Usuario creado exitosamente"})
 }
 
-// Login maneja la autenticación de usuarios y generación de JWT
+// Login godoc
+// @Summary Inicia sesión de usuario
+// @Description Autentica a un usuario y devuelve un token JWT.
+// @Tags Auth
+// @Accept  json
+// @Produce  json
+// @Param credentials body LoginRequest true "Credenciales de usuario (email y password)"
+// @Success 200 {object} map[string]string "Token JWT generado exitosamente"
+// @Failure 400 {object} map[string]string "Datos inválidos"
+// @Failure 401 {object} map[string]string "Credenciales incorrectas"
+// @Failure 500 {object} map[string]string "Error interno"
+// @Router /auth/login [post]
 func Login(c *gin.Context) {
-	var input struct {
-		Email    string `json:"email" binding:"required,email"`
-		Password string `json:"password" binding:"required"`
-	}
+	var input LoginRequest
 	if err := c.ShouldBindJSON(&input); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Datos inválidos: " + err.Error()})
 		return
@@ -71,7 +100,7 @@ func Login(c *gin.Context) {
 		return
 	}
 
-	// Generar token JWT (la función GenerateJWT se define en utils)
+	// Generar token JWT
 	token, err := utils.GenerateJWT(user.ID.Hex())
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Error al generar token"})
