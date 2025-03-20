@@ -266,6 +266,6 @@ Esto garantiza que el contenedor se reinicie si la instancia se reinicia o si el
 
 - **Unitarias:** Ejecuta `go test ./...` en tu entorno local para correr las pruebas.
 - **Integración:** Usa Postman o Insomnia para probar manualmente los endpoints.
-- **Swagger (Opcional):** Si has integrado Swagger, genera la documentación y prueba los endpoints.
+- **Swagger (Opcional):** Se has integrado Swagger, prueba los endpoints.
 
 ---
