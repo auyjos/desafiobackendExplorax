@@ -9,6 +9,7 @@ import (
 	"explorax-backend/internal/handlers"
 	"explorax-backend/internal/middleware"
 
+	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
 	swaggerFiles "github.com/swaggo/files"
@@ -34,7 +35,7 @@ func main() {
 
 	// Configurar Gin Router
 	router := gin.Default()
-
+	router.Use(cors.Default())
 	// Agregar Swagger UI
 	router.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 
@@ -82,6 +83,7 @@ func main() {
 	if port == "" {
 		port = "8080"
 	}
+	router.Use(cors.Default())
 
 	router.Run(":" + port)
 }
