@@ -1,30 +1,38 @@
-# Usa una imagen oficial de Go para compilar
+# Etapa 1: Construcción de la aplicación
 FROM golang:1.24.1-alpine AS builder
 
-# Crea un directorio de trabajo
+# Instalamos dependencias necesarias para swag (por ejemplo, git)
+RUN apk add --no-cache git
+
 WORKDIR /app
 
-# Copia los archivos go.mod y go.sum para descargar dependencias
+# Copiar archivos de dependencias
 COPY go.mod go.sum ./
 RUN go mod download
 
-# Copia el resto de tu código
+# Copiar el resto del código fuente
 COPY . .
 
-# Compila la aplicación
+# Instalar la herramienta swag para generar la documentación Swagger
+RUN go install github.com/swaggo/swag/cmd/swag@latest
+
+# Generar la documentación Swagger en la carpeta 'docs'
+RUN swag init --generalInfo cmd/main.go --output docs
+
+# Compilar la aplicación, asegurándote de apuntar al archivo main correcto
 RUN go build -o main cmd/main.go
 
-# Segunda etapa: imagen minimalista
+# Etapa 2: Imagen final minimalista
 FROM alpine:3.17
 
-# Crea un directorio para tu app
 WORKDIR /app
 
-# Copia el binario compilado desde la etapa anterior
+# Copiar el binario compilado y la documentación Swagger
 COPY --from=builder /app/main .
+COPY --from=builder /app/docs ./docs
 
-# Expón el puerto en el que tu app escucha
+# Exponer el puerto en el que corre tu app (según tu main, 8080)
 EXPOSE 8080
 
-# Comando por defecto para ejecutar la app
+# Ejecutar el binario por defecto
 CMD ["./main"]
